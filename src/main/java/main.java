@@ -1,30 +1,18 @@
 /**
  * Created by kim on 2/20/14.
  */
-import info.aduna.iteration.Iterations;
 import org.openrdf.model.*;
-import org.openrdf.model.impl.LinkedHashModel;
-import org.openrdf.model.vocabulary.FOAF;
-import org.openrdf.model.vocabulary.RDF;
-import org.openrdf.model.vocabulary.RDFS;
-import org.openrdf.model.vocabulary.XMLSchema;
 import org.openrdf.repository.*;
 import org.openrdf.repository.sail.SailRepository;
 import org.openrdf.rio.RDFParseException;
-import org.openrdf.sail.memory.MemoryStore;
 import org.openrdf.OpenRDFException;
-import org.openrdf.repository.Repository;
 import org.openrdf.rio.RDFFormat;
 import java.io.File;
-import java.io.FileInputStream;
-import java.net.URL;
-import org.openrdf.repository.Repository;
-import org.openrdf.repository.sail.SailRepository;
+
 import org.openrdf.sail.nativerdf.NativeStore;
 import java.io.IOException;
-import org.openrdf.rio.Rio;
 import java.util.List;
-import org.openrdf.OpenRDFException;
+
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.query.TupleQuery;
 import org.openrdf.query.TupleQueryResult;
@@ -33,12 +21,38 @@ import org.openrdf.query.QueryLanguage;
 
 public class main {
 
-    private static File dataDir = new File("dbs/test/");
-    private static String indexes = "spoc,posc,cosp";
+    private static File testDataDir = new File("dbs/test/");
+    private static File agriBusiDataDir = new File("dbs/agri-busi/");
+    private static String indexes = "spoc,posc,cosp,cspo,cpos";
+
     public static void main(String args[]) throws RepositoryException {
-        System.out.println("Hello World!");
+        loadTestData(testDataDir);
+        readData(testDataDir);
+    }
+
+    private static void loadTestData(File dataDir) throws RepositoryException {
+        File file = new File("test.ttl");
+        org.openrdf.repository.Repository repo = new SailRepository(new NativeStore(dataDir, indexes));
+        repo.initialize();
+        RepositoryConnection con = repo.getConnection();
+        try
+        {
+            con.add(file,"" , RDFFormat.TURTLE);
+        }
+        catch (RDFParseException e) {
+            e.printStackTrace();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        finally {
+            con.close();
+            repo.shutDown();
+        }
+    }
+
+    private static void readData(File dataDir) throws RepositoryException {
         org.openrdf.repository.Repository repo = null;
-        loadTestData();
         repo = new SailRepository(new NativeStore(dataDir, indexes));
 
         repo.initialize();
@@ -70,26 +84,4 @@ public class main {
             con.close();
         }
     }
-
-    private static void loadTestData() throws RepositoryException {
-        File file = new File("test.ttl");
-        org.openrdf.repository.Repository repo = new SailRepository(new NativeStore(dataDir, indexes));
-        repo.initialize();
-        RepositoryConnection con = repo.getConnection();
-        try
-        {
-            con.add(file,"" , RDFFormat.TURTLE);
-        }
-        catch (RDFParseException e) {
-            e.printStackTrace();
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-        finally {
-            con.close();
-            repo.shutDown();
-        }
-    }
-
 }
