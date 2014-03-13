@@ -19,19 +19,19 @@ import org.openrdf.query.TupleQueryResult;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.QueryLanguage;
 
-public class main {
+public class Main {
 
     private static File testDataDir = new File("dbs/test/");
     private static File agriBusiDataDir = new File("dbs/agri-busi/");
     private static String indexes = "spoc,posc,cosp,cspo,cpos";
 
     public static void main(String args[]) throws RepositoryException {
-        loadTestData(testDataDir);
+        loadData(testDataDir,"test.ttl");
         readData(testDataDir);
     }
 
-    private static void loadTestData(File dataDir) throws RepositoryException {
-        File file = new File("test.ttl");
+    private static void loadData(File dataDir,String inputFile) throws RepositoryException {
+        File file = new File(inputFile);
         org.openrdf.repository.Repository repo = new SailRepository(new NativeStore(dataDir, indexes));
         repo.initialize();
         RepositoryConnection con = repo.getConnection();
