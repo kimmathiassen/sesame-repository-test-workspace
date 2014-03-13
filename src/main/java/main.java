@@ -33,8 +33,8 @@ import org.openrdf.query.QueryLanguage;
 public class main {
     public static void main(String args[]) throws RepositoryException {
         System.out.println("Hello World!");
-        File file = new File("/home/kim/Documents/test.ttl");
-        File dataDir = new File("/home/kim/Downloads/");
+        File file = new File("test.ttl");
+        File dataDir = new File("dbs/test/");
         String indexes = "spoc,posc,cosp";
         org.openrdf.repository.Repository repo = null;
 
@@ -72,11 +72,6 @@ public class main {
         finally {
             con.close();
         }
-
-
-
-
-
 
     }
 
