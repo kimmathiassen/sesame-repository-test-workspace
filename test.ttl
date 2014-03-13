@@ -149,3 +149,6 @@ rdf:type ns5:RSAPublicKey .
 <http://id.myopenlink.net/dataspace/person/KingsleyUyiIdehen#cert226> ns5:modulus "a8cb1f46026ce187db957de27379bf9cc35e5b63e539ad941bf229e4f673d6f4cd6dda5eefba6d5c580384f17eb83c8b89307aa17316a386dace491486e700fe22025669bc497d9edef2b64e113eeb2c9e863245481200ba3ee1d159775e42e04a39845a0fe00c372e7e3d4f0dad87307692e6f7057bf72b1f3fa7222f45e6438c705164e50fd5aea3a42809c99f6901aa5ddb3310e909e7295f4c08bf00acddb1e4282c6d179d3da93488beffd1df419a30c1ecb02bd0c85fc47dbf67633b54100fafa67d61f447eb3afcc3fb0b2e5ff373bfcc25fcfeab43686ae21b88e31cd71a5135fa2bff39403a4e3d563882f007b128abb555bc698e5167bb99a9dfa3"^^<http://www.w3.org/2001/XMLSchema#hexBinary> ;
 rdf:type ns5:RSAPublicKey ;
 ns5:exponent "65537"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<http://palindrome> rdf:label "step on no pets".
+<http://not-a-palindrome> rdf:label "some label".
