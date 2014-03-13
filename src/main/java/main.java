@@ -32,6 +32,7 @@ import org.openrdf.query.QueryLanguage;
 
 public class main {
     public static void main(String args[]) throws RepositoryException {
+
         System.out.println("Hello World!");
         File file = new File("/home/kim/Documents/test.ttl");
         File dataDir = new File("/home/kim/Downloads/");
@@ -43,6 +44,7 @@ public class main {
         repo.initialize();
 
         RepositoryConnection con = repo.getConnection();
+
         try {
             con.add(file,"" , RDFFormat.TURTLE);
 
@@ -52,7 +54,7 @@ public class main {
             TupleQueryResult result = tupleQuery.evaluate();
 
 
-            List<String> bindingNames = result.getBindingNames();
+            /*List<String> bindingNames = result.getBindingNames();
             while (result.hasNext()) {
                 BindingSet bindingSet = result.next();
                 Value firstValue = bindingSet.getValue(bindingNames.get(0));
@@ -61,7 +63,7 @@ public class main {
                 System.out.print(firstValue);
                 System.out.print(secondValue);
                 System.out.print("\n");
-            }
+            }*/
         }
         catch (OpenRDFException e) {
             e.printStackTrace();
@@ -72,6 +74,7 @@ public class main {
         finally {
             con.close();
         }
+
 
 
 

@@ -1,0 +1,19 @@
+Manifest-Version: 1.0
+Class-Path: sesame-repository-http-2.7.10.jar sesame-rio-turtle-2.7.10
+ .jar sesame-repository-api-2.7.10.jar sesame-queryresultio-sparqlxml-
+ 2.7.10.jar sesame-rio-languages-2.7.10.jar sesame-repository-manager-
+ 2.7.10.jar commons-io-2.4.jar sesame-repository-sail-2.7.10.jar sesam
+ e-queryparser-serql-2.7.10.jar sesame-queryparser-api-2.7.10.jar sesa
+ me-queryparser-sparql-2.7.10.jar sesame-rio-api-2.7.10.jar sesame-rio
+ -datatypes-2.7.10.jar sesame-rio-ntriples-2.7.10.jar sesame-queryalge
+ bra-model-2.7.10.jar sesame-sail-api-2.7.10.jar sesame-http-protocol-
+ 2.7.10.jar sesame-http-client-2.7.10.jar commons-codec-1.4.jar sesame
+ -model-2.7.10.jar sesame-query-2.7.10.jar sesame-queryresultio-api-2.
+ 7.10.jar commons-httpclient-3.1.jar sesame-repository-contextaware-2.
+ 7.10.jar sesame-util-2.7.10.jar sesame-repository-event-2.7.10.jar lo
+ gback-classic-0.9.28.jar slf4j-api-1.6.1.jar logback-core-0.9.28.jar 
+ sesame-sail-inferencer-2.7.10.jar sesame-config-2.7.10.jar sesame-sai
+ l-memory-2.7.10.jar sesame-queryalgebra-evaluation-2.7.10.jar sesame-
+ sail-nativerdf-2.7.10.jar sesame-repository-sparql-2.7.10.jar
+Main-Class: PalindromeFunc
+
