@@ -4,12 +4,15 @@
 import org.openrdf.model.*;
 import org.openrdf.repository.*;
 import org.openrdf.repository.sail.SailRepository;
-import org.openrdf.rio.RDFParseException;
+import org.openrdf.rio.*;
 import org.openrdf.OpenRDFException;
-import org.openrdf.rio.RDFFormat;
+
 import java.io.File;
 
 import org.openrdf.sail.nativerdf.NativeStore;
+
+import java.io.FileInputStream;
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.util.List;
 
@@ -26,18 +29,62 @@ public class Main {
     private static String indexes = "spoc,posc,cosp,cspo,cpos";
 
     public static void main(String args[]) throws RepositoryException {
-        loadData(testDataDir,"test.ttl");
-        readData(testDataDir);
+        //loadData(testDataDir,"test.ttl");
+        //readData(testDataDir,"SELECT ?x ?y WHERE { ?x ?p ?y } LIMIT 10");
+        //loadData(agriBusiDataDir, "../../Documents/10sem/sw10/procedures/agri.nt");
+        loadDataDirectory(agriBusiDataDir, "../../Documents/10sem/sw10/procedures/agri");
+        readData(agriBusiDataDir, "SELECT ?x ?y WHERE { ?x ?p ?y } LIMIT 10");
     }
 
-    private static void loadData(File dataDir,String inputFile) throws RepositoryException {
+    private static void loadDataProgramticChunking(File dataDir,String inputFile) throws RepositoryException {
         File file = new File(inputFile);
         org.openrdf.repository.Repository repo = new SailRepository(new NativeStore(dataDir, indexes));
         repo.initialize();
         RepositoryConnection con = repo.getConnection();
+        con.setAutoCommit(false);
+
+        RDFParser parser = Rio.createParser(RDFFormat.forFileName(inputFile));
+        parser.setRDFHandler(new ChunkCommitter(con,false));
+
         try
         {
-            con.add(file,"" , RDFFormat.TURTLE);
+            BufferedInputStream is = new BufferedInputStream(new FileInputStream(file),100*1024*1024); //100 MB
+            parser.parse(is,"");
+            con.commit();
+        }
+        catch (RDFParseException e) {
+            e.printStackTrace();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        catch (RDFHandlerException e) {
+            e.printStackTrace();
+        } finally {
+            con.close();
+            repo.shutDown();
+        }
+    }
+
+    private static void loadDataDirectory(File dataDir,String inputFileDir) throws RepositoryException {
+        File directory = new File(inputFileDir);
+        org.openrdf.repository.Repository repo = new SailRepository(new NativeStore(dataDir, indexes));
+        repo.initialize();
+        RepositoryConnection con = repo.getConnection();
+
+        try
+        {
+            int i = 0;
+            File[] files = directory.listFiles();
+            long start = System.nanoTime();
+            for (File file: files)  
+            {
+                String fileName = file.getAbsolutePath();
+                con.add(file, null, RDFFormat.NTRIPLES);
+                ++i;
+                System.out.println("Files processed: " + i + "/" + files.length + ". Time: " + (System.nanoTime()-start)/1000000 + " ms");
+            }
+            con.commit();
         }
         catch (RDFParseException e) {
             e.printStackTrace();
@@ -51,7 +98,30 @@ public class Main {
         }
     }
 
-    private static void readData(File dataDir) throws RepositoryException {
+    private static void loadData(File dataDir,String inputFile) throws RepositoryException {
+        File file = new File(inputFile);
+        org.openrdf.repository.Repository repo = new SailRepository(new NativeStore(dataDir, indexes));
+        repo.initialize();
+        RepositoryConnection con = repo.getConnection();
+
+        try
+        {
+            con.add(file,null,RDFFormat.NTRIPLES);
+            con.commit();
+        }
+        catch (RDFParseException e) {
+            e.printStackTrace();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        finally {
+            con.close();
+            repo.shutDown();
+        }
+    }
+
+    private static void readData(File dataDir,String query) throws RepositoryException {
         org.openrdf.repository.Repository repo = null;
         repo = new SailRepository(new NativeStore(dataDir, indexes));
 
@@ -60,8 +130,7 @@ public class Main {
         RepositoryConnection con = repo.getConnection();
         try
         {
-            String queryString = "SELECT ?x ?y WHERE { ?x ?p ?y } ";
-            TupleQuery tupleQuery = con.prepareTupleQuery(QueryLanguage.SPARQL, queryString);
+            TupleQuery tupleQuery = con.prepareTupleQuery(QueryLanguage.SPARQL, query);
 
             TupleQueryResult result = tupleQuery.evaluate();
 
