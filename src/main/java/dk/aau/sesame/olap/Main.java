@@ -1,3 +1,4 @@
+package dk.aau.sesame.olap;
 /**
  * Created by kim on 2/20/14.
  */
@@ -29,11 +30,14 @@ public class Main {
     private static String indexes = "spoc,posc,cosp,cspo,cpos";
 
     public static void main(String args[]) throws RepositoryException {
-        //loadData(testDataDir,"test.ttl");
+        loadData(testDataDir,"test.ttl");
         //readData(testDataDir,"SELECT ?x ?y WHERE { ?x ?p ?y } LIMIT 10");
         //loadData(agriBusiDataDir, "../../Documents/10sem/sw10/procedures/agri.nt");
-        loadDataDirectory(agriBusiDataDir, "../../Documents/10sem/sw10/procedures/agri");
-        readData(agriBusiDataDir, "SELECT ?x ?y WHERE { ?x ?p ?y } LIMIT 10");
+        //loadDataDirectory(agriBusiDataDir, "../../Documents/10sem/sw10/procedures/agri");
+        //readData(agriBusiDataDir, "SELECT ?x ?y WHERE { ?x ?p ?y } LIMIT 10");
+        readData(testDataDir, "PREFIX fn: <http://example.org/custom-function/>"+
+            "SELECT ?x WHERE { ?x rdf:label ?label."+
+            "FILTER(fn:palindrome(?label)) } LIMIT 10");
     }
 
     private static void loadDataProgramticChunking(File dataDir,String inputFile) throws RepositoryException {
@@ -106,7 +110,7 @@ public class Main {
 
         try
         {
-            con.add(file,null,RDFFormat.NTRIPLES);
+            con.add(file, null, RDFFormat.TURTLE);
             con.commit();
         }
         catch (RDFParseException e) {

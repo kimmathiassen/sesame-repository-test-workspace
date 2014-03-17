@@ -86,7 +86,7 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>Main</mainClass>
+              <mainClass>dk.aau.sesame.olap.Main</mainClass>
             </manifest>
           </archive>
           <descriptorRefs>

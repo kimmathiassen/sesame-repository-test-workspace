@@ -1,3 +1,5 @@
+package dk.aau.sesame.olap;
+
 import org.openrdf.model.Statement;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
