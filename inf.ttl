@@ -1,0 +1,36 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rdfh: <http://example/rdfh#> .
+@prefix rdfh-inst: <http://example/rdfh-inst#> .
+
+<http://class-a> rdf:type rdfs:Class .
+<http://class-b> rdf:type rdfs:Class ;
+                 rdfs:subClassOf <http://class-a> .
+
+<http://res-a> rdf:type <http://class-a> .
+<http://res-b> rdf:type <http://class-b> .
+
+rdfh:DateDimensionProperty rdfs:subPropertyOf rdfh:DimensionLevelProperty .
+rdfh:DimensionLevelProperty rdfs:subPropertyOf rdf:Property .
+rdfh:MeasureProperty rdfs:subPropertyOf rdf:Property .
+rdfh:DimensionProperty rdfs:subPropertyOf rdf:Property .
+
+rdfh:d_date  a rdfh:DateDimensionProperty .
+rdfh:d_month a rdfh:DateDimensionProperty .
+rdfh:d_year  a rdfh:DateDimensionProperty .
+
+rdfh:lo_orderdate a rdfh:DimensionProperty .
+
+rdfh:lo_quantity a rdfh:MeasureProperty.
+rdfh:lo_revenues a rdfh:MeasureProperty.
+
+<lineorder-a> a rdfh-inst:lineorder ;
+              rdfh:lo_quantity "25" ;
+              rdfh:lo_revenues "100".
+
+<date-a> a rdfh-inst:date ;
+         rdfh:d_date "1" ;
+         rdfh:d_month "1" ;
+         rdfh:d_year "2010" .
+
+<lineorder-a> rdfh:lo_orderdate <date-a> .
