@@ -1,3 +1,4 @@
+package dk.aau.sesame.olap;
 /**
  * Created by kim on 3/13/14.
  */
