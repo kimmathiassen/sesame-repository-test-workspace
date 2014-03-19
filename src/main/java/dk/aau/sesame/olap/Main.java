@@ -39,9 +39,9 @@ public class Main {
         //readData(testDataDir, "PREFIX fn: <http://example.org/custom-function/>"+
         //    "SELECT ?x WHERE { ?x rdf:label ?label."+
         //    "FILTER(fn:palindrome(?label)) } LIMIT 10");
-        loadInferredData(inferenceDataDir, "inf.ttl");
+        loadInferredData(inferenceDataDir, "ssb-inf.ttl");
         //readData(inferenceDataDir, "select * where {?x rdf:type <http://class-a>}");
-        readData(inferenceDataDir, "prefix rdfh-inst: <http://example/rdfh-inst#> select * where {?S ?P ?O . ?S a rdfh-inst:lineorder}");
+        readData(inferenceDataDir, "prefix rdfh: <http://lod2.eu/schemas/rdfh#> select * where {?S rdfh:s_name ?O . ?S a rdfh:lineorder}");
     }
 
     private static void loadDataProgramticChunking(File dataDir,String inputFile) throws RepositoryException {
@@ -146,11 +146,14 @@ public class Main {
             int i = 0;
             while (result.hasNext()) {
                 BindingSet bindingSet = result.next();
-                for (String name : bindingNames)
+                if(i < 100)
                 {
-                    System.out.print(bindingSet.getValue(name) + " ");
+                    for (String name : bindingNames)
+                    {
+                        System.out.print(bindingSet.getValue(name) + " ");
+                    }
+                    System.out.println();
                 }
-                System.out.println();
                 ++i;
             }
             System.out.println(i);
@@ -165,26 +168,31 @@ public class Main {
 
     private static void loadInferredData(File dataDir, String inputFile) throws RepositoryException, SailException, MalformedQueryException {
         File file = new File(inputFile);
-        org.openrdf.repository.Repository repo = new SailRepository(
-                new CustomGraphQueryInferencer(
-                    new ForwardChainingRDFSInferencer(
-                            new NativeStore(dataDir, indexes)
-                    ),
+        org.openrdf.repository.Repository repo = new SailRepository
+        (
+            new ForwardChainingRDFSInferencer
+            (
+                new CustomGraphQueryInferencer
+                (
+                    new NativeStore(dataDir, indexes),
+
                     QueryLanguage.SPARQL,
-                    "prefix rdfh: <http://example/rdfh#> " +
-                            "prefix rdfh-inst: <http://example/rdfh-inst#> " +
+
+                    "prefix rdfh: <http://lod2.eu/schemas/rdfh#> " +
+                            "prefix rdfh-inst: <http://lod2.eu/schemas/rdfh-inst#> " +
                             "CONSTRUCT {?fact ?levelProp ?level} " +
                             "WHERE {?fact ?dimProp ?dim . " +
                             " ?dimProp a rdfh:DimensionProperty . " +
-                            " ?dim ?levelProp ?level . " +
-                            " ?levelProp a rdfh:DimesionLevelProperty .}",
-                    "prefix rdfh: <http://example/rdfh#> " +
-                            "prefix rdfh-inst: <http://example/rdfh-inst#> " +
+                            " ?dim ?levelProp ?level . }",
+
+                    "prefix rdfh: <http://lod2.eu/schemas/rdfh#> " +
+                            "prefix rdfh-inst: <http://lod2.eu/schemas/rdfh-inst#> " +
                             "CONSTRUCT {?fact ?levelProp ?level} " +
                             "WHERE {?fact ?levelProp ?level . " +
                             " ?fact a rdfh-inst:lineorder . " +
                             " ?levelProp a rdfh:DimesionLevelProperty . }"
                 )
+            )
         );
         repo.initialize();
         RepositoryConnection con = repo.getConnection();
