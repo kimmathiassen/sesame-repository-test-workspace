@@ -2,22 +2,23 @@ package dk.aau.sesame.olap;
 /**
  * Created by kim on 2/20/14.
  */
+import org.apache.commons.cli.*;
 import org.openrdf.model.*;
 import org.openrdf.query.*;
+import org.openrdf.query.parser.QueryParserRegistry;
+import org.openrdf.query.parser.sparql.SPARQLParserFactory;
 import org.openrdf.repository.*;
 import org.openrdf.repository.sail.SailRepository;
 import org.openrdf.rio.*;
 import org.openrdf.OpenRDFException;
 
-import java.io.File;
+import java.io.*;
 
 import org.openrdf.sail.SailException;
 import org.openrdf.sail.nativerdf.NativeStore;
 
-import java.io.FileInputStream;
-import java.io.BufferedInputStream;
-import java.io.IOException;
 import java.util.List;
+import java.util.Scanner;
 
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.sail.inferencer.fc.ForwardChainingRDFSInferencer;
@@ -31,27 +32,55 @@ public class Main {
     private static File inferenceDataDir = new File("dbs/inference/");
     private static File agriBusiDataDir = new File("dbs/agri-busi/");
     private static String indexes = "spoc,posc,cosp,cspo,cpos";
+    private static Options options = new Options();
 
-    public static void main(String args[]) throws RepositoryException, SailException, MalformedQueryException {
-        if(args.length != 3)
+    private static boolean commit;
+    private static long chunkSize;
+
+    public static void main(String args[]) throws Exception {
+
+
+        options.addOption(OptionBuilder.withLongOpt("commit")
+                .withDescription("commit after every CHUNK triple")
+                .create());
+        options.addOption(OptionBuilder.withLongOpt("no-commit")
+                .withDescription("do not commit after every CHUNK triple (default)")
+                .create());
+        options.addOption(OptionBuilder.withLongOpt( "load" )
+                .withDescription( "load INPUT-FILE into DATA-DIR, INPUT-FILE may be a directory" )
+                .create());
+        options.addOption(OptionBuilder.withLongOpt( "query" )
+                .withDescription( "query the DATA-DIR with query specified with QUERY or INPUT-FILE" )
+                .create());
+        options.addOption(OptionBuilder.withLongOpt( "chunk" )
+                .hasArg()
+                .withArgName("size")
+                .withDescription( "size of chunks measure load speed and be committed if COMMIT is set, use k and M for 1000 and 1000000 (default 1M)" )
+                .create());
+
+        if(args.length < 3)
         {
             printUsage();
             return;
         }
+        String dataDir = args[args.length-2];
+        String inputFile = args[args.length-1];
         RDFParserRegistry.getInstance().add(new TurtleParserFactory());
-        if(args[0].equals("--load"))
-        {
-            String dataDir = args[1];
-            String inputFile = args[2];
+        QueryParserRegistry.getInstance().add(new SPARQLParserFactory());
 
-            if((new File(inputFile)).isDirectory())
-            {
-                loadDataDirectory(new File(dataDir),inputFile);
-            }
-            else
-            {
-                loadDataProgramticChunking(new File(dataDir),inputFile);
-            }
+        CommandLineParser parser = new PosixParser();
+        CommandLine commandLine = parser.parse(options,args);
+
+        chunkSize = Long.parseLong(commandLine.getOptionValue("chunk","1M").toUpperCase().replaceAll("K","000").replaceAll("M","000000"));
+        commit = commandLine.hasOption("commit");
+
+        if(commandLine.hasOption("load"))
+        {
+            loadData(dataDir,inputFile);
+        }
+        else if(commandLine.hasOption("query"))
+        {
+            readData(dataDir,inputFile);
         }
         else
         {
@@ -75,25 +104,42 @@ public class Main {
         //        " select (count(*) as ?count) where {?S ?P ?O}");
     }
 
-    private static void printUsage() {
-        System.out.println("whatever [--load | --query] data-dir [file-name | query]");
+    private static void loadData(String dataDirName,String inputFileName) throws Exception
+    {
+        File inputFile = new File(inputFileName);
+        File dataDir = new File(dataDirName);
+        if(!inputFile.isFile())
+        {
+            throw new IllegalArgumentException("Invalid input file specified");
+        }
+        if(inputFile.isDirectory())
+        {
+            loadDataDirectory(dataDir,inputFile);
+        }
+        else
+        {
+            loadDataProgramticChunking(dataDir,inputFile);
+        }
     }
 
-    private static void loadDataProgramticChunking(File dataDir,String inputFile) throws RepositoryException {
-        File file = new File(inputFile);
+    private static void printUsage() {
+        HelpFormatter formatter = new HelpFormatter();
+        formatter.printHelp("sesam [OPTIONS]* DATA-DIR [INPUT-FILE | QUERY]", options);
+    }
+
+    private static void loadDataProgramticChunking(File dataDir,File inputFile) throws RepositoryException {
         org.openrdf.repository.Repository repo = new SailRepository(new NativeStore(dataDir, indexes));
         repo.initialize();
         RepositoryConnection con = repo.getConnection();
         //con.setAutoCommit(false);
 
-        RDFParser parser = Rio.createParser(RDFFormat.forFileName(inputFile));
-        parser.setRDFHandler(new ChunkCommitter(con,false));
+        RDFParser parser = Rio.createParser(RDFFormat.forFileName(inputFile.getName()));
+        parser.setRDFHandler(new ChunkCommitter(con,commit,chunkSize));
 
         try
         {
-            BufferedInputStream is = new BufferedInputStream(new FileInputStream(file),10*1024*1024); //10 MB
+            BufferedInputStream is = new BufferedInputStream(new FileInputStream(inputFile),10*1024*1024); //10 MB
             parser.parse(is,"");
-            //con.commit();
         }
         catch (RDFParseException e) {
             e.printStackTrace();
@@ -109,8 +155,7 @@ public class Main {
         }
     }
 
-    private static void loadDataDirectory(File dataDir,String inputFileDir) throws RepositoryException {
-        File directory = new File(inputFileDir);
+    private static void loadDataDirectory(File dataDir,File inputFileDir) throws RepositoryException {
         org.openrdf.repository.Repository repo = new SailRepository(new NativeStore(dataDir, indexes));
         repo.initialize();
         RepositoryConnection con = repo.getConnection();
@@ -118,8 +163,9 @@ public class Main {
         try
         {
             int i = 0;
-            File[] files = directory.listFiles();
+            File[] files = inputFileDir.listFiles();
             long start = System.nanoTime();
+            con.begin();
             for (File file: files)  
             {
                 String fileName = file.getAbsolutePath();
@@ -141,34 +187,32 @@ public class Main {
         }
     }
 
-    private static void loadData(File dataDir,String inputFile) throws RepositoryException {
-        File file = new File(inputFile);
-        org.openrdf.repository.Repository repo = new SailRepository(new NativeStore(dataDir, indexes));
-        repo.initialize();
-        RepositoryConnection con = repo.getConnection();
+    private static void readData(String dataDir,String query) throws RepositoryException, FileNotFoundException {
 
-        try
+        File queryFile = new File(query);
+        if(queryFile.isFile())
         {
-            long start = System.nanoTime();
-            con.add(file, null, RDFFormat.TURTLE);
-            con.commit();
-            System.out.println("Data loaded in :" + (System.nanoTime()-start)/1000000 + " ms");
+            if(queryFile.isDirectory())
+            {
+                for(File file : queryFile.listFiles())
+                {
+                    readData(dataDir, file.getAbsolutePath());
+                }
+            }
+            else if(queryFile.canRead())
+            {
+                query = new Scanner(queryFile).useDelimiter("\\Z").next();
+                readData(dataDir, query);
+            }
+            else
+            {
+                throw new IllegalArgumentException("Unable to read file: '" + query + "' for query");
+            }
+            return;
         }
-        catch (RDFParseException e) {
-            e.printStackTrace();
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-        finally {
-            con.close();
-            repo.shutDown();
-        }
-    }
 
-    private static void readData(File dataDir,String query) throws RepositoryException {
         org.openrdf.repository.Repository repo = null;
-        repo = new SailRepository(new NativeStore(dataDir, indexes));
+        repo = new SailRepository(new NativeStore(new File(dataDir), indexes));
 
         repo.initialize();
 

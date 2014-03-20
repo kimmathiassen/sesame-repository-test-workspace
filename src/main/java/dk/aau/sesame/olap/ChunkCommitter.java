@@ -16,23 +16,25 @@ public class ChunkCommitter implements RDFHandler
     private RepositoryConnection conn;
     private long start;
     private boolean commit;
+    private long chunkSize;
 
     private long count = 0L;
+    private long lastTime;
 
-    // do intermittent commit every 1.000.000 triples
-    private long chunksize = 1000000L;
 
-    public ChunkCommitter(RepositoryConnection conn, boolean commit) {
+    public ChunkCommitter(RepositoryConnection conn, boolean commit, long chunkSize) {
         inserter = new RDFInserter(conn);
         this.conn = conn;
         this.commit = commit;
-        start = System.nanoTime();
+        this.chunkSize = chunkSize;
     }
 
     @Override
     public void startRDF() throws RDFHandlerException {
         inserter.startRDF();
         try {
+            start = System.nanoTime();
+            lastTime = start;
             conn.begin();
         } catch (RepositoryException e) {
             e.printStackTrace();
@@ -44,6 +46,9 @@ public class ChunkCommitter implements RDFHandler
         inserter.endRDF();
         try {
             conn.commit();
+            long time = System.nanoTime();
+            System.out.println("Triples loaded: " + count + ". Time: " + (time-start)/1000000 + " ms. Load speed avg: " + count*1000000000/(time-start) + " stm/s" +
+                    " - commit");
         } catch (RepositoryException e) {
             e.printStackTrace();
         }
@@ -61,14 +66,18 @@ public class ChunkCommitter implements RDFHandler
         count++;
         // do an intermittent commit whenever the number of triples
         // has reached a multiple of the chunk size
-        if (count % chunksize == 0) {
+        if (count % chunkSize == 0) {
             try {
                 if(commit)
                 {
                     conn.commit();
                     conn.begin();
                 }
-                System.out.println("Triples loaded: " + count + ". Time: " + (System.nanoTime()-start)/1000000 + " ms");
+                long time = System.nanoTime();
+                System.out.println("Triples loaded: " + count + ". Time: " + (time-start)/1000000 + " ms. Load speed avg: " +
+                        count*1000000000/(time-start) + " stm/s. Load speed cur: " + chunkSize*1000000000/(time-lastTime) + " stm/s" +
+                        (commit ? " - commit" : ""));
+                lastTime = time;
             } catch (RepositoryException e) {
                 throw new RDFHandlerException(e);
             }
