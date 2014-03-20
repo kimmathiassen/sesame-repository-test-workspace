@@ -22,6 +22,8 @@ import java.util.List;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.sail.inferencer.fc.ForwardChainingRDFSInferencer;
 import org.openrdf.sail.inferencer.fc.CustomGraphQueryInferencer;
+import org.openrdf.rio.RDFParserRegistry;
+import org.openrdf.rio.turtle.TurtleParserFactory;
 
 public class Main {
 
@@ -31,6 +33,30 @@ public class Main {
     private static String indexes = "spoc,posc,cosp,cspo,cpos";
 
     public static void main(String args[]) throws RepositoryException, SailException, MalformedQueryException {
+        if(args.length != 3)
+        {
+            printUsage();
+            return;
+        }
+        RDFParserRegistry.getInstance().add(new TurtleParserFactory());
+        if(args[0].equals("--load"))
+        {
+            String dataDir = args[1];
+            String inputFile = args[2];
+
+            if((new File(inputFile)).isDirectory())
+            {
+                loadDataDirectory(new File(dataDir),inputFile);
+            }
+            else
+            {
+                loadDataProgramticChunking(new File(dataDir),inputFile);
+            }
+        }
+        else
+        {
+            printUsage();
+        }
         //loadData(testDataDir,"test.ttl");
         //readData(testDataDir,"SELECT ?x ?y WHERE { ?x ?p ?y } LIMIT 10");
         //loadData(agriBusiDataDir, "../../Documents/10sem/sw10/procedures/agri.nt");
@@ -39,9 +65,18 @@ public class Main {
         //readData(testDataDir, "PREFIX fn: <http://example.org/custom-function/>"+
         //    "SELECT ?x WHERE { ?x rdf:label ?label."+
         //    "FILTER(fn:palindrome(?label)) } LIMIT 10");
-        loadInferredData(inferenceDataDir, "ssb-inf.ttl");
+        //loadInferredData(inferenceDataDir, "ssb-inf-10k.ttl");
         //readData(inferenceDataDir, "select * where {?x rdf:type <http://class-a>}");
-        readData(inferenceDataDir, "prefix rdfh: <http://lod2.eu/schemas/rdfh#> select * where {?S rdfh:s_name ?O . ?S a rdfh:lineorder}");
+        //readData(inferenceDataDir, "prefix rdfh: <http://lod2.eu/schemas/rdfh#>" +
+        //        " prefix rdfh-inst: <http://lod2.eu/schemas/rdfh-inst#> " +
+        //        " select * where {rdfh-inst:lineorder_1_2 ?P ?O}");
+        //readData(inferenceDataDir, "prefix rdfh: <http://lod2.eu/schemas/rdfh#>" +
+        //        " prefix rdfh-inst: <http://lod2.eu/schemas/rdfh-inst#> " +
+        //        " select (count(*) as ?count) where {?S ?P ?O}");
+    }
+
+    private static void printUsage() {
+        System.out.println("whatever [--load | --query] data-dir [file-name | query]");
     }
 
     private static void loadDataProgramticChunking(File dataDir,String inputFile) throws RepositoryException {
@@ -49,16 +84,16 @@ public class Main {
         org.openrdf.repository.Repository repo = new SailRepository(new NativeStore(dataDir, indexes));
         repo.initialize();
         RepositoryConnection con = repo.getConnection();
-        con.setAutoCommit(false);
+        //con.setAutoCommit(false);
 
         RDFParser parser = Rio.createParser(RDFFormat.forFileName(inputFile));
         parser.setRDFHandler(new ChunkCommitter(con,false));
 
         try
         {
-            BufferedInputStream is = new BufferedInputStream(new FileInputStream(file),100*1024*1024); //100 MB
+            BufferedInputStream is = new BufferedInputStream(new FileInputStream(file),10*1024*1024); //10 MB
             parser.parse(is,"");
-            con.commit();
+            //con.commit();
         }
         catch (RDFParseException e) {
             e.printStackTrace();
@@ -114,8 +149,10 @@ public class Main {
 
         try
         {
+            long start = System.nanoTime();
             con.add(file, null, RDFFormat.TURTLE);
             con.commit();
+            System.out.println("Data loaded in :" + (System.nanoTime()-start)/1000000 + " ms");
         }
         catch (RDFParseException e) {
             e.printStackTrace();
@@ -163,6 +200,7 @@ public class Main {
         }
         finally {
             con.close();
+            repo.shutDown();
         }
     }
 
@@ -181,26 +219,34 @@ public class Main {
                     "prefix rdfh: <http://lod2.eu/schemas/rdfh#> " +
                             "prefix rdfh-inst: <http://lod2.eu/schemas/rdfh-inst#> " +
                             "CONSTRUCT {?fact ?levelProp ?level} " +
-                            "WHERE {?fact ?dimProp ?dim . " +
-                            " ?dimProp a rdfh:DimensionProperty . " +
-                            " ?dim ?levelProp ?level . }",
+                            "WHERE {" +
+                            " ?fact ?dimProp ?dim . " +
+                            " ?dim a rdfh:Dimension . " +
+                            " ?dim ?levelProp ?level . " +
+                            "}",
 
-                    "prefix rdfh: <http://lod2.eu/schemas/rdfh#> " +
-                            "prefix rdfh-inst: <http://lod2.eu/schemas/rdfh-inst#> " +
-                            "CONSTRUCT {?fact ?levelProp ?level} " +
-                            "WHERE {?fact ?levelProp ?level . " +
-                            " ?fact a rdfh-inst:lineorder . " +
-                            " ?levelProp a rdfh:DimesionLevelProperty . }"
+                        "prefix rdfh: <http://lod2.eu/schemas/rdfh#> " +
+                                "prefix rdfh-inst: <http://lod2.eu/schemas/rdfh-inst#> " +
+                                "CONSTRUCT {?fact ?dimProp ?dim . " +
+                                " ?dim ?levelPro ?level} " +
+                                "WHERE {" +
+                                " ?dim a rdfh:Dimension . " +
+                                " ?fact ?dimProp ?dim . " +
+                                " ?dim ?levelProp ?level . " +
+                                "}"
                 )
             )
         );
         repo.initialize();
         RepositoryConnection con = repo.getConnection();
+        con.begin();
 
         try
         {
+            long start = System.nanoTime();
             con.add(file, null, RDFFormat.TURTLE);
             con.commit();
+            System.out.println("Data loaded in: " + (System.nanoTime() - start) / 1000000 + " ms");
         }
         catch (RDFParseException e) {
             e.printStackTrace();

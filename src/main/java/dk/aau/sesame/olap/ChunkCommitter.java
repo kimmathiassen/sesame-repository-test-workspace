@@ -32,11 +32,21 @@ public class ChunkCommitter implements RDFHandler
     @Override
     public void startRDF() throws RDFHandlerException {
         inserter.startRDF();
+        try {
+            conn.begin();
+        } catch (RepositoryException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void endRDF() throws RDFHandlerException {
         inserter.endRDF();
+        try {
+            conn.commit();
+        } catch (RepositoryException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -56,6 +66,7 @@ public class ChunkCommitter implements RDFHandler
                 if(commit)
                 {
                     conn.commit();
+                    conn.begin();
                 }
                 System.out.println("Triples loaded: " + count + ". Time: " + (System.nanoTime()-start)/1000000 + " ms");
             } catch (RepositoryException e) {

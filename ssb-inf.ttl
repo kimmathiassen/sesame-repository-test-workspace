@@ -2,10 +2,10 @@
 @prefix rdfh: <http://lod2.eu/schemas/rdfh#> .
 @prefix rdfh-inst: <http://lod2.eu/schemas/rdfh-inst#> .
 
-rdfh:customer rdfs:subClassOf rdfh:DimensionProperty .
-rdfh:date rdfs:subClassOf rdfh:DimensionProperty .
-rdfh:part rdfs:subClassOf rdfh:DimensionProperty .
-rdfh:supplier rdfs:subClassOf rdfh:DimensionProperty .
+rdfh:customer rdfs:subClassOf rdfh:Dimension .
+rdfh:date rdfs:subClassOf rdfh:Dimension .
+rdfh:part rdfs:subClassOf rdfh:Dimension .
+rdfh:supplier rdfs:subClassOf rdfh:Dimension .
 
 rdfh-inst:customer_1
     a rdfh:customer ;
