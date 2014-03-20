@@ -72,7 +72,7 @@ public class Main {
         CommandLine commandLine = parser.parse(options,args);
 
         chunkSize = Long.parseLong(commandLine.getOptionValue("chunk","1M").toUpperCase().replaceAll("K","000").replaceAll("M","000000"));
-        commit = commandLine.hasOption("commit");
+        commit = commandLine.hasOption("commit") && !commandLine.hasOption("no-commit");
 
         if(commandLine.hasOption("load"))
         {
@@ -131,7 +131,7 @@ public class Main {
         org.openrdf.repository.Repository repo = new SailRepository(new NativeStore(dataDir, indexes));
         repo.initialize();
         RepositoryConnection con = repo.getConnection();
-        //con.setAutoCommit(false);
+        con.setAutoCommit(false);
 
         RDFParser parser = Rio.createParser(RDFFormat.forFileName(inputFile.getName()));
         parser.setRDFHandler(new ChunkCommitter(con,commit,chunkSize));
