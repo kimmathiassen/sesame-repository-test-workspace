@@ -108,16 +108,17 @@ public class Main {
     {
         File inputFile = new File(inputFileName);
         File dataDir = new File(dataDirName);
-        if(!inputFile.isFile())
-        {
-            throw new IllegalArgumentException("Invalid input file specified");
-        }
+
         if(inputFile.isDirectory())
         {
             loadDataDirectory(dataDir,inputFile);
         }
         else
         {
+            if(!inputFile.isFile())
+            {
+                throw new IllegalArgumentException("Invalid input file specified");
+            }
             loadDataProgramticChunking(dataDir,inputFile);
         }
     }
@@ -190,7 +191,7 @@ public class Main {
     private static void readData(String dataDir,String query) throws RepositoryException, FileNotFoundException {
 
         File queryFile = new File(query);
-        if(queryFile.isFile())
+        if(queryFile.exists())
         {
             if(queryFile.isDirectory())
             {
@@ -254,7 +255,7 @@ public class Main {
         (
             new ForwardChainingRDFSInferencer
             (
-                new CustomGraphQueryInferencer
+                                                                                                    new CustomGraphQueryInferencer
                 (
                     new NativeStore(dataDir, indexes),
 
