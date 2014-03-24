@@ -132,7 +132,7 @@ public class Main {
         org.openrdf.repository.Repository repo = new SailRepository(new NativeStore(dataDir, indexes));
         repo.initialize();
         RepositoryConnection con = repo.getConnection();
-        //con.setAutoCommit(false);
+        con.setAutoCommit(false);
 
         RDFParser parser = Rio.createParser(RDFFormat.forFileName(inputFile.getName()));
         parser.setRDFHandler(new ChunkCommitter(con,commit,chunkSize));
