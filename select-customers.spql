@@ -1,0 +1,34 @@
+prefix skos:           <http://www.w3.org/2004/02/skos/core#>
+prefix scovo:          <http://purl.org/NET/scovo#>
+prefix void:           <http://rdfs.org/ns/void#>
+prefix qb:             <http://purl.org/linked-data/cube#>
+prefix dcterms:        <http://purl.org/dc/terms/>
+prefix rdfh:           <http://lod2.eu/schemas/rdfh#>
+prefix rdfh-inst:      <http://lod2.eu/schemas/rdfh-inst#>
+prefix geonames:       <http://www.geonames.org/ontology#>
+prefix owl:            <http://www.w3.org/2002/07/owl#>
+prefix rdf:            <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix wgs:            <http://www.w3c.org/2003/01/geo/wgs84_pos#>
+prefix xml:            <http://www.w3.org/XML/1998/namespace>
+prefix xsd:            <http://www.w3.org/2001/XMLSchema#>
+prefix agri:           <http://172.25.11.87:8890/ontologies/agriculture/>
+prefix agro:           <http://aims.fao.org/aos/agrovoc/>
+prefix aowl:           <http://bblfish.net/work/atom-owl/2006-06-06/>
+prefix bus:            <http://172.25.11.87:8890/ontologies/business/>
+prefix foaf:           <http://xmlns.com/foaf/0.1/>
+prefix rdfs:           <http://www.w3.org/2000/01/rdf-schema#>
+prefix time:           <http://www.w3.org/2006/time#>
+prefix dbpcat:         <http://dbpedia.org/resource/Category:>
+prefix dbpedia:        <http://dbpedia.org/resource/>
+prefix virtrdf:        <http://www.openlinksw.com/schemas/virtrdf#>
+
+select * 
+where 
+{
+    ?S rdfh:new ?O . 
+    #?S a rdfh:customer .
+}
+limit 100
+
+
+
