@@ -38,7 +38,7 @@ public class LoadMode implements Mode{
 
         try
         {
-            con.setAutoCommit(false); // This seems to be necessary for speeding up windows
+            //con.setAutoCommit(false); // This seems to be necessary for speeding up windows
             if(inputFile.isDirectory())
             {
                 loadDataDirectory(con,inputFile);
@@ -78,7 +78,15 @@ public class LoadMode implements Mode{
         int i = 0;
         File[] files = inputFileDir.listFiles();
         long start = System.nanoTime();
-        con.begin();
+
+        try // The autocommit stuff in handle forces us to check catch this potential exception
+        {
+            con.begin();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
         for (File file: files)
         {
             con.add(file, null, RDFFormat.NTRIPLES);

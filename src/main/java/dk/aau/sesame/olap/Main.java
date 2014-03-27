@@ -25,20 +25,16 @@ import org.openrdf.sail.inferencer.fc.CustomGraphQueryInferencer;
 import org.openrdf.rio.RDFParserRegistry;
 import org.openrdf.rio.turtle.TurtleParserFactory;
 
-public class Main {
-
-    private static File testDataDir = new File("dbs/test/");
-    private static File inferenceDataDir = new File("dbs/inference/");
-    private static File agriBusiDataDir = new File("dbs/agri-busi/");
-    private static String indexes = "spoc,posc,cosp,cspo,cpos";
+public class Main
+{
+    private static String indexes = "spoc,posc";
     private static Options options = new Options();
 
     private static boolean commit;
     private static long chunkSize;
 
-    public static void main(String args[]) throws Exception {
-
-
+    public static void main(String args[]) throws Exception
+    {
         options.addOption(OptionBuilder.withLongOpt("commit")
                 .withDescription("commit after every CHUNK triple")
                 .create());
@@ -65,6 +61,11 @@ public class Main {
                 .withArgName("size")
                 .withDescription( "size of chunks measure load speed and be committed if COMMIT is set, use k and M for 1000 and 1000000 (default 1M)" )
                 .create());
+        options.addOption(OptionBuilder.withLongOpt( "index" )
+                .hasArg()
+                .withArgName("indexes")
+                .withDescription( "comma separated indexes, e.g. spoc is a subject-predicate-object-context index (default '"+indexes+"')" )
+                .create());
 
         if(args.length < 3)
         {
@@ -79,7 +80,16 @@ public class Main {
         CommandLine commandLine = parser.parse(options,args);
 
         chunkSize = Long.parseLong(commandLine.getOptionValue("chunk","1M").toUpperCase().replaceAll("K","000").replaceAll("M","000000"));
+        indexes = commandLine.getOptionValue("index",indexes);
         commit = commandLine.hasOption("commit") && !commandLine.hasOption("no-commit");
+
+        int i = commandLine.hasOption("load") ? 1 : 0;
+        i += commandLine.hasOption("construct") ? 1 : 0;
+        i += commandLine.hasOption("query") ? 1 : 0;
+        if(i != 1)
+        {
+            printUsage();
+        }
 
         Mode mode = null;
         String arg = null;
