@@ -6,7 +6,6 @@ package dk.aau.sesame.olap;
 
 import org.openrdf.query.algebra.evaluation.function.Function;
 import org.openrdf.query.algebra.evaluation.ValueExprEvaluationException;
-import org.openrdf.model.impl.*;
 import org.openrdf.model.*;
 
 /**
@@ -16,7 +15,7 @@ import org.openrdf.model.*;
 public class PalindromeFunc implements Function {
 
     // define a constant for the namespace of our custom function
-    public static final String NAMESPACE = "http://example.org/custom-function/";
+    public static final String NAMESPACE = "http://example.org/customfunction/";
 
     /**
      * return the URI 'http://example.org/custom-function/palindrome' as a String

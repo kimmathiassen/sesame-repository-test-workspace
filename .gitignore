@@ -2,3 +2,4 @@ dbs
 tmp
 target
 *.iml
+*.xml

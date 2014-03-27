@@ -59,13 +59,15 @@ public class QueryMode implements Mode {
 
             List<String> bindingNames = result.getBindingNames();
             int i = 0;
+            System.out.println("@prefix lod2-inst: <http://lod2.eu/schemas/rdfh-inst>");
+            System.out.println("@prefix lod2: <http://lod2.eu/schemas/rdfh>");
             while (result.hasNext()) {
                 BindingSet bindingSet = result.next();
                 if(i < 100)
                 {
                     for (String name : bindingNames)
                     {
-                        System.out.print(bindingSet.getValue(name) + " ");
+                        System.out.print(removeNamespace(bindingSet.getValue(name) + " "));
                     }
                     System.out.println();
                 }
@@ -80,5 +82,18 @@ public class QueryMode implements Mode {
             con.close();
             repo.shutDown();
         }
+    }
+    private String removeNamespace(String binding)
+    {
+        String result;
+        if (binding.contains("http://lod2.eu/schemas/rdfh-inst"))
+        {
+            result = binding.replace("http://lod2.eu/schemas/rdfh-inst", "lod2-inst:");
+        }
+        else
+        {
+            result = binding.replace("http://lod2.eu/schemas/rdfh", "lod2:");
+        }
+        return result;
     }
 }
