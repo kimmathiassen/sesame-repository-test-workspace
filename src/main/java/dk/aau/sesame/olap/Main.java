@@ -28,6 +28,7 @@ import org.openrdf.rio.turtle.TurtleParserFactory;
 public class Main
 {
     private static String indexes = "spoc,posc";
+    private static String inputDataDir = "";
     private static Options options = new Options();
 
     private static boolean commit;
@@ -37,6 +38,9 @@ public class Main
     {
         options.addOption(OptionBuilder.withLongOpt("commit")
                 .withDescription("commit after every CHUNK triple")
+                .create());
+        options.addOption(OptionBuilder.withLongOpt("test")
+                .withDescription("run a test query in DATA-DIR repository")
                 .create());
         options.addOption(OptionBuilder.withLongOpt("no-commit")
                 .withDescription("do not commit after every CHUNK triple (default)")
@@ -54,7 +58,7 @@ public class Main
         options.addOption(OptionBuilder.withLongOpt( "construct" )
                 .hasArg()
                 .withArgName("query-file | query-dir | construct-query")
-                .withDescription( "run construct query on DATA-DIR and load resulting tipples back into DATA-DIR" )
+                .withDescription( "run construct query on INPUT-REPO and load resulting triples back into DATA-DIR" )
                 .create());
         options.addOption(OptionBuilder.withLongOpt( "chunk" )
                 .hasArg()
@@ -66,12 +70,12 @@ public class Main
                 .withArgName("indexes")
                 .withDescription( "comma separated indexes, e.g. spoc is a subject-predicate-object-context index (default '"+indexes+"')" )
                 .create());
+        options.addOption(OptionBuilder.withLongOpt( "input-repo" )
+                .hasArg()
+                .withArgName("repository")
+                .withDescription( "input repository used for construct (default is DATA-DIR)")
+                .create());
 
-        if(args.length < 3)
-        {
-            printUsage();
-            return;
-        }
         String dataDir = args[args.length-1];
         RDFParserRegistry.getInstance().add(new TurtleParserFactory());
         QueryParserRegistry.getInstance().add(new SPARQLParserFactory());
@@ -81,14 +85,18 @@ public class Main
 
         chunkSize = Long.parseLong(commandLine.getOptionValue("chunk","1M").toUpperCase().replaceAll("K","000").replaceAll("M","000000"));
         indexes = commandLine.getOptionValue("index",indexes);
+        inputDataDir = commandLine.getOptionValue("input-repo",inputDataDir);
         commit = commandLine.hasOption("commit") && !commandLine.hasOption("no-commit");
 
         int i = commandLine.hasOption("load") ? 1 : 0;
         i += commandLine.hasOption("construct") ? 1 : 0;
         i += commandLine.hasOption("query") ? 1 : 0;
-        if(i != 1)
+        i += commandLine.hasOption("test") ? 1 : 0;
+        if(i > 1)
         {
+            System.out.println("Too many modes given");
             printUsage();
+            return;
         }
 
         Mode mode = null;
@@ -100,7 +108,7 @@ public class Main
         }
         else if(commandLine.hasOption("construct"))
         {
-            mode = new ConstructMode(commit, indexes);
+            mode = new ConstructMode(commit, indexes, inputDataDir);
             arg = commandLine.getOptionValue("construct");
         }
         else if(commandLine.hasOption("query"))
@@ -108,9 +116,15 @@ public class Main
             mode = new QueryMode(indexes);
             arg = commandLine.getOptionValue("query");
         }
+        else if(commandLine.hasOption("test"))
+        {
+            mode = new QueryMode(indexes);
+            arg = "select (count(*) as ?count) where {?S ?P ?O}";
+        }
         else
         {
             printUsage();
+            return;
         }
         mode.handle(dataDir, arg);
 
@@ -134,7 +148,7 @@ public class Main
 
     private static void printUsage() {
         HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("sesam [OPTIONS...] DATA-DIR\nspecify either LOAD, QUERY, or CONSTRUCT", options);
+        formatter.printHelp("sesam [OPTIONS...] DATA-DIR\nspecify either LOAD, QUERY, TEST, or CONSTRUCT", options);
     }
 
     private static void loadInferredData(File dataDir, String inputFile) throws RepositoryException, SailException, MalformedQueryException {

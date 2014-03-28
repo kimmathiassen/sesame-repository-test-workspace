@@ -59,8 +59,8 @@ public class QueryMode implements Mode {
 
             List<String> bindingNames = result.getBindingNames();
             int i = 0;
-            System.out.println("@prefix lod2-inst: <http://lod2.eu/schemas/rdfh-inst>");
-            System.out.println("@prefix lod2: <http://lod2.eu/schemas/rdfh>");
+            System.out.println("@prefix rdfh-inst: <http://lod2.eu/schemas/rdfh-inst#> .");
+            System.out.println("@prefix rdfh: <http://lod2.eu/schemas/rdfh#> .");
             while (result.hasNext()) {
                 BindingSet bindingSet = result.next();
                 if(i < 100)
@@ -88,11 +88,11 @@ public class QueryMode implements Mode {
         String result;
         if (binding.contains("http://lod2.eu/schemas/rdfh-inst"))
         {
-            result = binding.replace("http://lod2.eu/schemas/rdfh-inst", "lod2-inst:");
+            result = binding.replace("http://lod2.eu/schemas/rdfh-inst#", "rdfh-inst:");
         }
         else
         {
-            result = binding.replace("http://lod2.eu/schemas/rdfh", "lod2:");
+            result = binding.replace("http://lod2.eu/schemas/rdfh#", "rdfh:");
         }
         return result;
     }

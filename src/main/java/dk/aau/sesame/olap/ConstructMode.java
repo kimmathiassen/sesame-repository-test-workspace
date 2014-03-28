@@ -1,5 +1,6 @@
 package dk.aau.sesame.olap;
 
+import org.openrdf.model.Statement;
 import org.openrdf.query.*;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
@@ -15,15 +16,26 @@ import java.util.Scanner;
 public class ConstructMode implements Mode {
     private boolean commit;
     private String indexes;
+    private String inputDataDir;
 
     public ConstructMode(boolean commit, String indexes) {
+        this(commit, indexes,null);
+    }
+
+
+    public ConstructMode(boolean commit, String indexes, String inputDataDir) {
         this.commit = commit;
         this.indexes = indexes;
+        this.inputDataDir = inputDataDir;
     }
 
     @Override
     public void handle(String dataDir, String arg) throws Exception
     {
+        if(inputDataDir == null || inputDataDir.length() == 0)
+        {
+            inputDataDir = dataDir;
+        }
         File queryFile = new File(arg);
         if(queryFile.exists())
         {
@@ -51,18 +63,31 @@ public class ConstructMode implements Mode {
         org.openrdf.repository.Repository repo = new SailRepository(new NativeStore(new File(dataDir), indexes));
         repo.initialize();
         RepositoryConnection con = repo.getConnection();
+        RepositoryConnection inputCon;
+        org.openrdf.repository.Repository inputRepo = null;
+        if(inputDataDir == dataDir)
+        {
+            inputCon = con;
+        }
+        else
+        {
+            inputRepo = new SailRepository(new NativeStore(new File(inputDataDir), indexes));
+            inputRepo.initialize();
+            inputCon = inputRepo.getConnection();
+        }
         try
         {
             long start = System.nanoTime();
             con.begin();
-            GraphQuery graphQuery = con.prepareGraphQuery(QueryLanguage.SPARQL, arg);
+            GraphQuery graphQuery = inputCon.prepareGraphQuery(QueryLanguage.SPARQL, arg);
             GraphQueryResult result = graphQuery.evaluate();
-            con.add(result);
-            if(commit)
+            while(result.hasNext())
             {
-                con.commit();
-                con.begin();
+                Statement stm = result.next();
+                System.out.println(stm);
+                break;
             }
+            con.add(result);
             con.commit();
             System.out.println("Query processed in time: " + (System.nanoTime()-start)/1000000 + " ms");
         }
@@ -70,6 +95,11 @@ public class ConstructMode implements Mode {
             e.printStackTrace();
         }
         finally {
+            if(inputRepo != null)
+            {
+                inputCon.close();
+                inputRepo.shutDown();
+            }
             con.close();
             repo.shutDown();
         }
