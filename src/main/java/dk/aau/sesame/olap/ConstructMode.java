@@ -81,12 +81,6 @@ public class ConstructMode implements Mode {
             con.begin();
             GraphQuery graphQuery = inputCon.prepareGraphQuery(QueryLanguage.SPARQL, arg);
             GraphQueryResult result = graphQuery.evaluate();
-            while(result.hasNext())
-            {
-                Statement stm = result.next();
-                System.out.println(stm);
-                break;
-            }
             con.add(result);
             con.commit();
             System.out.println("Query processed in time: " + (System.nanoTime()-start)/1000000 + " ms");

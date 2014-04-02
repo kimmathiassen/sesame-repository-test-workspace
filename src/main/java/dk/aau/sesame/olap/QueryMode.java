@@ -53,7 +53,17 @@ public class QueryMode implements Mode {
 
         try
         {
-            TupleQuery tupleQuery = con.prepareTupleQuery(QueryLanguage.SPARQL, arg);
+            TupleQuery tupleQuery = null;
+            try
+            {
+                tupleQuery = con.prepareTupleQuery(QueryLanguage.SPARQL, arg);
+            }
+            catch(Exception e)
+            {
+                // quite a hack mayhapsestly
+                tupleQuery = con.prepareTupleQuery(QueryLanguage.SPARQL, "prefix rdfh-inst: <http://lod2.eu/schemas/rdfh-inst#> prefix rdfh: <http://lod2.eu/schemas/rdfh#> " +arg);
+            }
+
 
             TupleQueryResult result = tupleQuery.evaluate();
 
@@ -63,14 +73,11 @@ public class QueryMode implements Mode {
             System.out.println("@prefix rdfh: <http://lod2.eu/schemas/rdfh#> .");
             while (result.hasNext()) {
                 BindingSet bindingSet = result.next();
-                if(i < 100)
+                for (String name : bindingNames)
                 {
-                    for (String name : bindingNames)
-                    {
-                        System.out.print(removeNamespace(bindingSet.getValue(name) + " "));
-                    }
-                    System.out.println();
+                    System.out.print(removeNamespace(bindingSet.getValue(name) + " "));
                 }
+                System.out.println();
                 ++i;
             }
             System.out.println(i);
