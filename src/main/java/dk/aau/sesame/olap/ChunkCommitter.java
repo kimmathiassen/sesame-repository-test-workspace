@@ -66,7 +66,7 @@ public class ChunkCommitter implements RDFHandler
         count++;
         // do an intermittent commit whenever the number of triples
         // has reached a multiple of the chunk size
-        if (count % chunkSize == 0) {
+        if (chunkSize > 0 && count % chunkSize == 0) {
             try {
                 if(commit)
                 {

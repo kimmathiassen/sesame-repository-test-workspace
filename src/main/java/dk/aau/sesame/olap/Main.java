@@ -108,7 +108,7 @@ public class Main
         }
         else if(commandLine.hasOption("construct"))
         {
-            mode = new ConstructMode(commit, indexes, inputDataDir);
+            mode = new ConstructMode(commit, indexes, inputDataDir,chunkSize);
             arg = commandLine.getOptionValue("construct");
         }
         else if(commandLine.hasOption("query"))

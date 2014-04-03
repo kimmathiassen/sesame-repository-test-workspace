@@ -51,7 +51,7 @@ public class LoadMode implements Mode{
                 }
                 else
                 {
-                    throw new IllegalArgumentException("Invalid file specified for load data");
+                    throw new IllegalArgumentException("Invalid file specified for load data '" + inputFileName + "'");
                 }
             }
         }

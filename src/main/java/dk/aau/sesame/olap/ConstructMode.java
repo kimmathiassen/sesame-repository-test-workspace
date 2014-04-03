@@ -17,16 +17,18 @@ public class ConstructMode implements Mode {
     private boolean commit;
     private String indexes;
     private String inputDataDir;
+    private long chunkSize;
 
     public ConstructMode(boolean commit, String indexes) {
-        this(commit, indexes,null);
+        this(commit, indexes,null,-1);
     }
 
 
-    public ConstructMode(boolean commit, String indexes, String inputDataDir) {
+    public ConstructMode(boolean commit, String indexes, String inputDataDir, long chunkSize) {
         this.commit = commit;
         this.indexes = indexes;
         this.inputDataDir = inputDataDir;
+        this.chunkSize = chunkSize;
     }
 
     @Override
@@ -78,11 +80,8 @@ public class ConstructMode implements Mode {
         try
         {
             long start = System.nanoTime();
-            con.begin();
             GraphQuery graphQuery = inputCon.prepareGraphQuery(QueryLanguage.SPARQL, arg);
-            GraphQueryResult result = graphQuery.evaluate();
-            con.add(result);
-            con.commit();
+            graphQuery.evaluate(new ChunkCommitter(con,commit,chunkSize));
             System.out.println("Query processed in time: " + (System.nanoTime()-start)/1000000 + " ms");
         }
         catch (Exception e) {
