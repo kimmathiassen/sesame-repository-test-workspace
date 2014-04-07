@@ -42,6 +42,9 @@ public class Main
         options.addOption(OptionBuilder.withLongOpt("test")
                 .withDescription("run a test query in DATA-DIR repository")
                 .create());
+        options.addOption(OptionBuilder.withLongOpt("help")
+                .withDescription("show help text")
+                .create());
         options.addOption(OptionBuilder.withLongOpt("no-commit")
                 .withDescription("do not commit after every CHUNK triple (default)")
                 .create());
@@ -76,6 +79,11 @@ public class Main
                 .withDescription( "input repository used for construct (default is DATA-DIR)")
                 .create());
 
+        if(args.length == 0)
+        {
+            printUsage();
+            return;
+        }
         String dataDir = args[args.length-1];
         RDFParserRegistry.getInstance().add(new TurtleParserFactory());
         QueryParserRegistry.getInstance().add(new SPARQLParserFactory());
@@ -87,6 +95,12 @@ public class Main
         indexes = commandLine.getOptionValue("index",indexes);
         inputDataDir = commandLine.getOptionValue("input-repo",inputDataDir);
         commit = commandLine.hasOption("commit") && !commandLine.hasOption("no-commit");
+
+        if(commandLine.hasOption("help"))
+        {
+            printUsage();
+            return;
+        }
 
         int i = commandLine.hasOption("load") ? 1 : 0;
         i += commandLine.hasOption("construct") ? 1 : 0;
