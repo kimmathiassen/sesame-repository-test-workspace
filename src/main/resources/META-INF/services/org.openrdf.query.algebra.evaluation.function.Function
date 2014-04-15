@@ -1,3 +1,4 @@
 dk.aau.sesame.olap.PalindromeFunc
 org.openrdf.query.algebra.evaluation.function.string.Concat
 org.openrdf.query.algebra.evaluation.function.string.Substring
+dk.aau.sesame.olap.DateAdd
