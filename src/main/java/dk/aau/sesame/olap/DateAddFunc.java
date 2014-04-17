@@ -24,6 +24,8 @@ public class DateAddFunc implements Function
     public Literal evaluate(ValueFactory valueFactory, Value... args)
             throws ValueExprEvaluationException
     {
+        try
+        {
         if (args.length != 3) {
             throw new ValueExprEvaluationException("dateadd requires 3 argument, got " + args.length);
         }
@@ -37,15 +39,28 @@ public class DateAddFunc implements Function
                 Literal durationLiteral = (Literal)durationValue;
                 if (dateValue instanceof Literal) {
                     Literal dateLiteral = (Literal)dateValue;
-                    if (XMLDatatypeUtil.isCalendarDatatype(dateLiteral.getDatatype())) {
+                    if (XMLDatatypeUtil.isCalendarDatatype(dateLiteral.getDatatype()) ||
+                            XMLDatatypeUtil.isValidDate(dateLiteral.stringValue()) ||
+                            XMLDatatypeUtil.isValidDateTime(dateLiteral.stringValue())) {
                         if (XMLDatatypeUtil.isValidInt(durationLiteral.stringValue())) {
                             try {
                                 XMLGregorianCalendar calValue = dateLiteral.calendarValue();
                                 DatatypeFactory factory = DatatypeFactory.newInstance();
 
                                 String durationTypeStr = durationTypeLiteral.stringValue().toLowerCase();
-                                String durationStr = durationLiteral.stringValue();
-                                String XMLDateString = "P";
+                                String XMLDateString;
+                                String durationStr;
+                                long durationLong = durationLiteral.longValue();
+                                if(durationLong >= 0)
+                                {
+                                    XMLDateString = "P";
+                                    durationStr = String.valueOf(durationLong);
+                                }
+                                else
+                                {
+                                    XMLDateString = "-P";
+                                    durationStr = String.valueOf(-durationLong);
+                                }
                                 if(durationTypeStr.equals("year")) {
                                     XMLDateString += durationStr + "Y";
                                 }
@@ -91,6 +106,12 @@ public class DateAddFunc implements Function
         else
         {
             throw new ValueExprEvaluationException("unexpected input value for function: " + args[0]);
+        }
+        }
+        catch (Exception e)
+        {
+            System.out.println(e);
+            throw e;
         }
     }
 }
